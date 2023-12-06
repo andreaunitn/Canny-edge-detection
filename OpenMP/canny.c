@@ -229,6 +229,7 @@ nonMaxSuppression(
             }
 
             uint16_t sobel_magnitude = magnitude[gid];
+           
             /* Non-maximum suppression
              * Pick out the two neighbours that are perpendicular to the
              * current edge pixel */
@@ -261,6 +262,7 @@ nonMaxSuppression(
                         magnitude[idx(x, y, width, height, -1, 1)];
                     break;
             }
+           
             // Suppress the pixel here
             if ((sobel_magnitude < neighbour_max) ||
                 (sobel_magnitude < neighbour_max2)) {
@@ -271,6 +273,7 @@ nonMaxSuppression(
             // Marks YES pixels with 255, NO pixels with 0 and MAYBE pixels
             // with 127
             uint8_t t = 127;
+           
             if (sobel_magnitude > threshold_upper) t = 255;
             if (sobel_magnitude <= threshold_lower) t = 0;
             out[gid] = t;
@@ -349,53 +352,6 @@ edgeTracing(uint8_t *restrict image, size_t width, size_t height) {
             }
 
     } while(new_yes_found);
-
-    // Version of the LOOP 4.3.1 but with the critical section moved inside LOOP 4.4.1
-    /*
-    // LOOP 4.3.1
-    do {
-            new_yes_found = false;
-
-            coord_t *new_yes_pixels = malloc(width * height * sizeof(coord_t));
-            size_t num_new_yes = 0;
-
-            // LOOP 4.3.2
-            #pragma omp parallel for
-            for(size_t i = 0; i < num_yes_pixels; i++) {
-                coord_t yes_pixel = yes_pixels[i];
-
-                // LOOP 4.4.1
-                for(int k = 0; k < 8; k++) {
-                    coord_t dir_offs = neighbour_offsets[k];
-                    coord_t neighbour = {
-                        yes_pixel.x + dir_offs.x,
-                        yes_pixel.y + dir_offs.y
-                    };
-
-                    if (neighbour.x < 0) neighbour.x = 0;
-                    if (neighbour.x >= width) neighbour.x = width - 1;
-                    if (neighbour.y < 0) neighbour.y = 0;
-                    if (neighbour.y >= height) neighbour.y = height - 1;
-
-                    #pragma omp critical
-                    {
-                        if (image[neighbour.y * width + neighbour.x] == 127) {
-                            image[neighbour.y * width + neighbour.x] = 255;
-
-                            size_t index = num_new_yes++;
-                            new_yes_pixels[index] = neighbour;
-
-                            new_yes_found = true;
-                        }
-                    }
-                }
-            }
-
-            yes_pixels = new_yes_pixels;
-            num_yes_pixels = num_new_yes;
-
-    } while(new_yes_found);
-    */
 
     free(yes_pixels);
 
